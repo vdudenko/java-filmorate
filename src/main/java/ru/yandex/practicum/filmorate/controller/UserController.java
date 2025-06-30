@@ -31,6 +31,9 @@ public class UserController {
             log.error("Пользователь с таким имейлом уже есть");
             throw new DuplicatedDataException("Этот имейл уже используется");
         }
+        if (user.getName() == null) {
+            user.setName(user.getLogin());
+        }
 
         user.setId(getNextId());
         users.put(user.getId(), user);
