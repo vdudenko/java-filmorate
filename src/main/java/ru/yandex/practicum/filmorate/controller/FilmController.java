@@ -32,7 +32,6 @@ public class FilmController {
             log.error("Дата появления кино 1895-12-28");
             throw new ValidationException("Дата появления кино 1895-12-28");
         }
-        
         if (isFilmExist(film)) {
             log.error("Фильма с таким название уже есть");
             throw new DuplicatedDataException("Фильма с таким название уже есть");
