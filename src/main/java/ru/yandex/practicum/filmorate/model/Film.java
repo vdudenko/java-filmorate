@@ -11,6 +11,7 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 @ToString
 @EqualsAndHashCode(of = {"name"})
+@AllArgsConstructor
 public class Film {
     private long id;
     @NotBlank
