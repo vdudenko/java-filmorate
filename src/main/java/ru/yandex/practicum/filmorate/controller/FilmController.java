@@ -28,7 +28,6 @@ public class FilmController {
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
         log.info("Создание фильма начинается");
-
         
         if (checkReleaseDate(film.getReleaseDate())) {
             log.error("Дата появления кино 1895-12-28");
