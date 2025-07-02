@@ -54,10 +54,10 @@ public class FilmController {
         if (films.containsKey(film.getId())) {
             Film oldUser = films.get(film.getId());
 
-            if (checkReleaseDate(film.getReleaseDate())) {
-                log.error("Дата появления кино 1895-12-28");
-                throw new ValidationException("Дата появления кино 1895-12-28");
-            }
+            //if (checkReleaseDate(film.getReleaseDate())) {
+            //    log.error("Дата появления кино 1895-12-28");
+            //    throw new ValidationException("Дата появления кино 1895-12-28");
+            //}
 
             oldUser.setDuration(film.getDuration());
 
