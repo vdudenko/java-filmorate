@@ -28,10 +28,6 @@ public class FilmController {
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
         log.info("Создание фильма начинается");
-        if (!checkReleaseDate(film.getReleaseDate())) {
-            log.error("Дата появления кино 1895-12-28");
-            throw new ValidationException("Дата появления кино 1895-12-28");
-        }
         if (isFilmExist(film)) {
             log.error("Фильма с таким название уже есть");
             throw new DuplicatedDataException("Фильма с таким название уже есть");
@@ -53,11 +49,6 @@ public class FilmController {
 
         if (films.containsKey(film.getId())) {
             Film oldUser = films.get(film.getId());
-
-            if (!checkReleaseDate(film.getReleaseDate())) {
-                log.error("Дата появления кино 1895-12-28");
-                throw new ValidationException("Дата появления кино 1895-12-28");
-            }
 
             oldUser.setDuration(film.getDuration());
 
