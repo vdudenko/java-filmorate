@@ -98,7 +98,7 @@ public class InMemoryUserStorage implements UserStorage {
         user.addFriend(friendId);
         User otherUser = users.get(friendId);
         otherUser.addFriend(userId);
-    };
+    }
 
     @Override
     public void deleteFriend(long userId, long friendId) {
@@ -114,7 +114,7 @@ public class InMemoryUserStorage implements UserStorage {
         user.deleteFriend(friendId);
         User otherUser = users.get(friendId);
         otherUser.deleteFriend(userId);
-    };
+    }
 
     @Override
     public Collection<User> getFriends(long userId) {
@@ -129,7 +129,7 @@ public class InMemoryUserStorage implements UserStorage {
                 .filter(entry -> friends.contains(entry.getKey()))
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toCollection(ArrayList::new));
-    };
+    }
 
     @Override
     public Collection<User> getIntersectFriends(long userId, long otherId) {
@@ -147,7 +147,8 @@ public class InMemoryUserStorage implements UserStorage {
                 .filter(entry -> intersectionIds.contains(entry.getKey()))
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toCollection(ArrayList::new));
-    };
+    }
+
     public Map<Long, User> getUsers () {
         return users;
     }
