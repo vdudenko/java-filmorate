@@ -18,7 +18,7 @@ public class ExceptionHandler {
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleDuplicatedDataException(final DuplicatedDataException e) {
         return new ErrorResponse(e.getMessage());
     }
@@ -31,7 +31,7 @@ public class ExceptionHandler {
 
     @org.springframework.web.bind.annotation.ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleParameterNotValidException(final MethodArgumentNotValidException e) {
+    public ErrorResponse handleMethodArgumentNotValidException(final MethodArgumentNotValidException e) {
         return new ErrorResponse(e.getMessage());
     }
 

@@ -1,18 +1,22 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class InMemoryFilmStorage implements FilmStorage {
     private static final Map<Long, Film> films = new HashMap<>();
+    private final InMemoryUserStorage inMemoryUserStorage;
 
     @Override
     public Collection<Film> findAll() {
@@ -73,6 +77,9 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public void addLike(long filmId, long userId) {
         if (isNotFilmExist(filmId)) {
+            throw new NotFoundException("Фильм с id = " + filmId + " не найден");
+        }
+        if (!inMemoryUserStorage.getUsers().containsKey(userId)) {
             throw new NotFoundException("Пользователь с id = " + filmId + " не найден");
         }
         Film film = films.get(filmId);
@@ -82,6 +89,9 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public void deleteLike(long filmId, long userId) {
         if (isNotFilmExist(filmId)) {
+            throw new NotFoundException("Пользователь с id = " + filmId + " не найден");
+        }
+        if (!inMemoryUserStorage.getUsers().containsKey(userId)) {
             throw new NotFoundException("Пользователь с id = " + filmId + " не найден");
         }
         Film film = films.get(filmId);

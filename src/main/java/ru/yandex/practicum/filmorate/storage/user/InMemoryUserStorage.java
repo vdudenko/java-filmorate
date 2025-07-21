@@ -96,6 +96,8 @@ public class InMemoryUserStorage implements UserStorage {
         }
         User user = users.get(userId);
         user.addFriend(friendId);
+        User otherUser = users.get(friendId);
+        otherUser.addFriend(userId);
     };
 
     @Override
@@ -110,10 +112,16 @@ public class InMemoryUserStorage implements UserStorage {
         }
         User user = users.get(userId);
         user.deleteFriend(friendId);
+        User otherUser = users.get(friendId);
+        otherUser.deleteFriend(userId);
     };
 
     @Override
     public Collection<User> getFriends(long userId) {
+        if (!isUserExist(userId)) {
+            log.error("Пользователь с id = {} не найден", userId);
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
         User user = users.get(userId);
         Set<Long> friends = user.getFriends();
 
@@ -140,6 +148,9 @@ public class InMemoryUserStorage implements UserStorage {
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toCollection(ArrayList::new));
     };
+    public Map<Long, User> getUsers () {
+        return users;
+    }
 
     private long getNextId() {
         long currentMaxId = users.keySet()

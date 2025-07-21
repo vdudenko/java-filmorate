@@ -4,6 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 import ru.yandex.practicum.filmorate.annotation.MustBeAfter;
@@ -26,7 +27,7 @@ public class Film {
     private LocalDate releaseDate;
     @Positive
     private int duration;
-    private Set<Long> likes;
+    private Set<Long> likes = new HashSet<>();;
 
     public void addLike(long userId) {
         this.likes.add(userId);

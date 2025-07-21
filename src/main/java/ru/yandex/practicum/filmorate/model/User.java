@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 @Getter
@@ -28,7 +29,7 @@ public class User {
     @NotNull
     @PastOrPresent
     private LocalDate birthday;
-    private Set<Long> friends;
+    private Set<Long> friends = new HashSet<>();;
 
     public void addFriend(long friendId) {
         this.friends.add(friendId);
