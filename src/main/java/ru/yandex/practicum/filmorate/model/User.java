@@ -29,7 +29,7 @@ public class User {
     @NotNull
     @PastOrPresent
     private LocalDate birthday;
-    private Set<Long> friends = new HashSet<>();;
+    private Set<Long> friends = new HashSet<>();
 
     public void addFriend(long friendId) {
         this.friends.add(friendId);
