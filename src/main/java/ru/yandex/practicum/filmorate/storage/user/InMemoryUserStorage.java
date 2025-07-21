@@ -149,7 +149,7 @@ public class InMemoryUserStorage implements UserStorage {
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public Map<Long, User> getUsers () {
+    public Map<Long, User> getUsers() {
         return users;
     }
 
