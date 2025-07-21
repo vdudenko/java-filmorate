@@ -1,0 +1,7 @@
+server:
+  port: 8085
+logging:
+  level:
+    org:
+      zalando:
+        logbook: TRACE

@@ -1,102 +1,60 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
+
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 @RestController
 @Slf4j
+@RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
-    private static final Map<Long, User> users = new HashMap<>();
+    private final UserService userService;
 
     @GetMapping
     public Collection<User> findAll() {
-        log.info("Возвращаем список пользователей");
-        return users.values();
+        return userService.findAll();
     }
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        log.info("Создание пользователя начинается");
-
-        if (isUserExist(user)) {
-            log.error("Пользователь с таким имейлом уже есть");
-            throw new DuplicatedDataException("Этот имейл уже используется");
-        }
-        if (user.getName() == null) {
-            user.setName(user.getLogin());
-        }
-
-        user.setId(getNextId());
-        users.put(user.getId(), user);
-        log.info("Создание пользователя завершено");
-        return user;
+        return userService.create(user);
     }
 
     @PutMapping
     public User update(@Valid @RequestBody User user) {
-        log.info("Обновление пользователя начинается");
-
-        if (isUserExist(user)) {
-            log.error("Пользователь с таким имейлом уже есть");
-            throw new DuplicatedDataException("Этот имейл уже используется");
-        }
-
-        if (users.containsKey(user.getId())) {
-            User oldUser = users.get(user.getId());
-
-            if (user.getEmail() != null) {
-                oldUser.setEmail(user.getEmail());
-            }
-
-            if (user.getName() != null) {
-                oldUser.setName(user.getName());
-            }
-
-            if (user.getLogin() != null) {
-                oldUser.setLogin(user.getLogin());
-            }
-
-            if (user.getName() != null) {
-                oldUser.setName(user.getName());
-            }
-
-            if (user.getBirthday() != null) {
-                oldUser.setBirthday(user.getBirthday());
-            }
-
-            log.info("Обновление фильма Завершено");
-            return oldUser;
-        }
-
-        log.error("Пользователь с id = {} не найден", user.getId());
-        throw new NotFoundException("Пользователь с id = " + user.getId() + " не найден");
+        return userService.update(user);
     }
 
-    // вспомогательный метод для генерации идентификатора нового пользователя
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    @GetMapping("/{userId}")
+    public Optional<User> findById(@PathVariable long userId) {
+        return userService.findById(userId);
     }
 
-    public static boolean isUserExist(User newUser) {
-        for (User user : users.values()) {
-            if (newUser.equals(user)) {
-                return true;
-            }
-        }
-        return false;
+    @PutMapping("/{userId}/friends/{friendId}")
+    public void addFriend(@PathVariable long userId, @PathVariable long friendId) {
+        userService.addFriend(userId, friendId);
+    }
+
+    @DeleteMapping("/{userId}/friends/{friendId}")
+    public void deleteFriend(@PathVariable long userId, @PathVariable long friendId) {
+        userService.deleteFriend(userId, friendId);
+    }
+
+    @GetMapping("/{userId}/friends")
+    public Collection<User> getFriends(@PathVariable long userId) {
+        return userService.getFriends(userId);
+    }
+
+    @GetMapping("/{userId}/friends/common/{otherId}")
+    public Collection<User> getIntersectFriends(@PathVariable long userId, @PathVariable long otherId) {
+        return userService.getIntersectFriends(userId, otherId);
     }
 }
