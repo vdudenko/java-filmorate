@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import ru.yandex.practicum.filmorate.annotation.MustBeAfter;
@@ -28,6 +29,8 @@ public class Film {
     @Positive
     private int duration;
     private Set<Long> likes = new HashSet<>();
+    private List<Genre> genre;
+    private Rating rating;
 
     public void addLike(long userId) {
         this.likes.add(userId);
