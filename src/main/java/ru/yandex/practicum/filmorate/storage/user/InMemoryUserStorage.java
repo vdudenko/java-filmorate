@@ -5,9 +5,7 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -24,7 +22,7 @@ public class InMemoryUserStorage implements UserStorage {
     public User create(User user) {
         log.info("Создание пользователя начинается");
 
-        if (isUserExist(user)) {
+        if (isUserEmailExist(user)) {
             log.error("Пользователь с таким имейлом уже есть");
             throw new DuplicatedDataException("Этот имейл уже используется");
         }
@@ -43,7 +41,7 @@ public class InMemoryUserStorage implements UserStorage {
     public User update(User user) {
         log.info("Обновление пользователя начинается");
 
-        if (isUserExist(user)) {
+        if (isUserEmailExist(user)) {
             log.error("Пользователь с таким имейлом уже есть");
             throw new DuplicatedDataException("Этот имейл уже используется");
         }
@@ -85,68 +83,23 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void addFriend(long userId, long friendId) {
-        if (!isUserExist(userId)) {
-            log.error("Пользователь с id = {} не найден", userId);
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+    public Optional<User> findByEmail(User user) {
+        for (User u : users.values()) {
+            if (u.equals(user)) {
+                return Optional.of(user);
+            }
         }
-        if (!isUserExist(friendId)) {
-            log.error("Пользователь с id = {} не найден", friendId);
-            throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
-        }
-        User user = users.get(userId);
-        user.addFriend(friendId);
-        User otherUser = users.get(friendId);
-        otherUser.addFriend(userId);
+        return Optional.empty();
     }
 
     @Override
-    public void deleteFriend(long userId, long friendId) {
-        if (!isUserExist(userId)) {
-            log.error("Пользователь с id = {} не найден", userId);
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
-        }
-        if (!isUserExist(friendId)) {
-            log.error("Пользователь с id = {} не найден", friendId);
-            throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
-        }
-        User user = users.get(userId);
-        user.deleteFriend(friendId);
-        User otherUser = users.get(friendId);
-        otherUser.deleteFriend(userId);
+    public boolean isUserEmailExist(User user) {
+        return findByEmail(user).isPresent();
     }
 
     @Override
-    public Collection<User> getFriends(long userId) {
-        if (!isUserExist(userId)) {
-            log.error("Пользователь с id = {} не найден", userId);
-            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
-        }
-        User user = users.get(userId);
-        Set<Long> friends = user.getFriends();
-
-        return users.entrySet().stream()
-                .filter(entry -> friends.contains(entry.getKey()))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toCollection(ArrayList::new));
-    }
-
-    @Override
-    public Collection<User> getIntersectFriends(long userId, long otherId) {
-        User user = users.get(userId);
-        Set<Long> friends = user.getFriends();
-
-        User otherUser = users.get(otherId);
-        Set<Long> otherFriends = otherUser.getFriends();
-
-        Set<Long> intersectionIds = friends.stream()
-                .filter(otherFriends::contains)
-                .collect(Collectors.toSet());;
-
-        return users.entrySet().stream()
-                .filter(entry -> intersectionIds.contains(entry.getKey()))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toCollection(ArrayList::new));
+    public boolean isUserExist(long userId) {
+        return users.containsKey(userId);
     }
 
     public Map<Long, User> getUsers() {
@@ -160,18 +113,5 @@ public class InMemoryUserStorage implements UserStorage {
                 .max()
                 .orElse(0);
         return ++currentMaxId;
-    }
-
-    private boolean isUserExist(long userId) {
-        return users.containsKey(userId);
-    }
-
-    private static boolean isUserExist(User newUser) {
-        for (User user : users.values()) {
-            if (newUser.equals(user)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

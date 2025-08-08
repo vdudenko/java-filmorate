@@ -57,4 +57,9 @@ public class UserController {
     public Collection<User> getIntersectFriends(@PathVariable long userId, @PathVariable long otherId) {
         return userService.getIntersectFriends(userId, otherId);
     }
+
+    @PutMapping("/{userId}/confirm-friend-ship/{friendId}")
+    public boolean confirmFriendShip(@PathVariable long userId, @PathVariable long friendId) {
+        return userService.confirmedFriendShip(userId, friendId);
+    }
 }

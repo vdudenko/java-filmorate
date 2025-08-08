@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -16,6 +17,7 @@ import ru.yandex.practicum.filmorate.annotation.MustBeAfter;
 @ToString
 @EqualsAndHashCode(of = {"name"})
 @AllArgsConstructor
+@Builder
 public class Film {
     private long id;
     @NotBlank
@@ -28,9 +30,10 @@ public class Film {
     private LocalDate releaseDate;
     @Positive
     private int duration;
-    private Set<Long> likes = new HashSet<>();
     private List<Genre> genre;
-    private Rating rating;
+    private Rating mpa;
+    @JsonIgnore
+    private Set<Long> likes = new HashSet<>();
 
     public void addLike(long userId) {
         this.likes.add(userId);
