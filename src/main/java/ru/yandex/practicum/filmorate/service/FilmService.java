@@ -1,11 +1,11 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
-
+import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -13,10 +13,14 @@ import java.util.Optional;
 public class FilmService {
 
     @Autowired
+    @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
+    @Autowired
+    private final LikeStorage likeStorage;
 
-    public FilmService(InMemoryFilmStorage inMemoryFilmStorage) {
-        this.filmStorage = inMemoryFilmStorage;
+    public FilmService(FilmStorage filmStorage, LikeStorage likeStorage) {
+        this.filmStorage = filmStorage;
+        this.likeStorage = likeStorage;
     }
 
     public Collection<Film> findAll() {
@@ -36,11 +40,11 @@ public class FilmService {
     }
 
     public void addLike(long filmId, long userId) {
-        filmStorage.addLike(filmId, userId);
+        likeStorage.addLike(filmId, userId);
     }
 
     public void deleteLike(long filmId, long userId) {
-        filmStorage.deleteLike(filmId, userId);
+        likeStorage.deleteLike(filmId, userId);
     }
 
     public Collection<Film> getPopularFilms(int count) {

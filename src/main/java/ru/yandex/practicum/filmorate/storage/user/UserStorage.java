@@ -14,11 +14,9 @@ public interface UserStorage {
 
     Optional<User> findById(long userId);
 
-    void addFriend(long userId, long friendId);
+    Optional<User> findByEmail(User user);
 
-    void deleteFriend(long userId, long friendId);
+    boolean isUserEmailExist(User user);
 
-    Collection<User> getFriends(long userId);
-
-    Collection<User> getIntersectFriends(long userId, long otherId);
+    boolean isUserExist(long userId);
 }
