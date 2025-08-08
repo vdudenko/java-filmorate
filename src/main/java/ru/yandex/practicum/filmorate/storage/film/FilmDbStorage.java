@@ -5,16 +5,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.film.mapper.FilmRowMapper;
+import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.genre.mapper.GenreRowMapper;
+import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
 
 import java.sql.Date;
 import java.util.Collection;
@@ -29,6 +29,8 @@ public class FilmDbStorage implements FilmStorage {
     private final NamedParameterJdbcTemplate jdbc;
     private final FilmRowMapper mapper;
     private final GenreRowMapper genreMapper;
+    private final MpaDbStorage mpaDbStorage;
+    private final GenreDbStorage genreDbStorage;
 
     @Override
     public Collection<Film> findAll() {
@@ -57,17 +59,24 @@ public class FilmDbStorage implements FilmStorage {
 
         Film film = films.getFirst();
 
-        loadGenresForFilm(film);
+        genreDbStorage.loadGenresForFilm(film);
         return Optional.of(film);
     }
 
     @Override
-    public Optional<Film> findByName(String filmName) {
+    public Optional<Film> findByName(Film film) {
         MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("filmName", filmName);
+        params.addValue("filmName", film.getName());
         String sqlQuery = "SELECT f.*, r.name AS rating_name, r.description AS rating_description FROM films f " +
                 "LEFT JOIN ratings r ON f.rating_id = r.id " +
                 "WHERE f.name = :filmName";
+        if (film.getId() > 0) {
+            sqlQuery = "SELECT f.*, r.name AS rating_name, r.description AS rating_description FROM films f " +
+                    "LEFT JOIN ratings r ON f.rating_id = r.id " +
+                    "WHERE f.name = :filmName AND f.id != :filmId";
+            params.addValue("filmId", film.getId());
+        }
+
         return jdbc.query(sqlQuery, params, mapper).stream().findFirst();
     }
 
@@ -85,15 +94,15 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film create(Film film) {
-        log.info("Создание фильма начинается");
-        if (isFilmNameExist(film.getName())) {
-            log.error("Фильма с таким название уже есть");
-            throw new DuplicatedDataException("Фильма с таким название уже есть");
+        log.info("Создание фильма начинается" + film + "\n");
+        Long ratingId = film.getMpa() != null ? film.getMpa().getId() : null;
+
+        if (ratingId != null && !mpaDbStorage.isMpaExist(ratingId)) {
+            throw new NotFoundException("рейтинг с id: " + ratingId + "  не найден.");
         }
 
         final String sqlQuery = "INSERT INTO films(name, description, release_date, duration, rating_id) " +
                 "VALUES (:name, :description, :releaseDate, :duration, :ratingId)";
-        Long ratingId = film.getMpa() != null ? film.getMpa().getId() : null;
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("name", film.getName())
@@ -105,24 +114,19 @@ public class FilmDbStorage implements FilmStorage {
         jdbc.update(sqlQuery, params, keyHolder, new String[]{"id"});
 
         Long id = keyHolder.getKeyAs(Long.class);
-
         if (id == null) {
             throw new InternalServerException("Не удалось сохранить данные");
         }
 
         film.setId(id);
-        attachGenresToFilm(film);
-        log.info("Создание фильма завершено" + film);
+        genreDbStorage.attachGenresToFilm(film);
+        log.info("Создание фильма завершено" + film + "\n");
         return film;
     }
 
     @Override
     public Film update(Film film) {
         log.info("Обновление фильма начинается");
-        if (isFilmNameExist(film.getName())) {
-            log.error("Фильма с таким название уже есть");
-            throw new DuplicatedDataException("Фильма с таким название уже есть");
-        }
 
         if (!isNotExistFilm(film.getId())) {
             final String sqlQuery = "UPDATE films " +
@@ -143,7 +147,7 @@ public class FilmDbStorage implements FilmStorage {
                 throw new InternalServerException("Не удалось обновить данные");
             }
 
-            attachGenresToFilm(film);
+            genreDbStorage.attachGenresToFilm(film);
 
             log.info("Обновление фильма Завершено");
             return film;
@@ -153,8 +157,8 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public boolean isFilmNameExist(String filmName) {
-        return findByName(filmName).isPresent();
+    public boolean isFilmNameExist(Film film) {
+        return findByName(film).isPresent();
     }
 
     @Override
@@ -171,25 +175,6 @@ public class FilmDbStorage implements FilmStorage {
         params.addValue("filmId", film.getId());
 
         List<Genre> genres = jdbc.query(sqlQuery,params, genreMapper);
-        film.setGenre(genres);
-    }
-
-    private void attachGenresToFilm(Film film) {
-        if (film.getGenre() == null || film.getGenre().isEmpty()) {
-            return;
-        }
-
-        MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("filmId", film.getId());
-
-        jdbc.update("DELETE FROM film_genres WHERE film_id = :filmId", params);
-
-        String sqlQuery = "INSERT INTO film_genres (film_id, genre_id) VALUES (:filmId, :genreId)";
-
-        jdbc.batchUpdate(sqlQuery, film.getGenre().stream()
-                .map(genre -> new MapSqlParameterSource()
-                        .addValue("filmId", film.getId())
-                        .addValue("genreId", genre.getId())
-                ).toArray(SqlParameterSource[]::new));
+        film.setGenres(genres);
     }
 }

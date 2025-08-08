@@ -14,11 +14,11 @@ public interface FilmStorage {
 
     Optional<Film> findById(long filmId);
 
-    Optional<Film> findByName(String filmName);
+    Optional<Film> findByName(Film film);
 
     Collection<Film> getPopularFilms(int count);
 
-    boolean isFilmNameExist(String filmName);
+    boolean isFilmNameExist(Film film);
 
     boolean isNotExistFilm(long filmId);
 }

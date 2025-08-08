@@ -49,9 +49,7 @@ public class FriendDbStorage implements FriendStorage {
                     "VALUES (?, ?)";
             jdbc.update(sqlQuery, userId, friendId);
 
-            // пришлось добавить в тестах ожижает двустороннюю дружбу, хотя тз говорит об обратнос
-            confirmFriendShip(friendId, userId);
-
+//            confirmFriendShip(friendId, userId);
             log.info("Пользователь {} добавил в друзья пользователя {}", userId, friendId);
 
         } catch (DataIntegrityViolationException e) {
@@ -83,10 +81,10 @@ public class FriendDbStorage implements FriendStorage {
 
         try {
             String sqlQuery = "DELETE FROM user_friends " +
-                    "WHERE user_id IN (?, ?) " +
-                    "AND friend_id IN (?, ?)";
+                    "WHERE user_id = ? " +
+                    "AND friend_id = ?";
 
-            jdbc.update(sqlQuery, userId, friendId, userId, friendId);
+            jdbc.update(sqlQuery, userId, friendId);
             log.info("Пользователь {} удалил из друзей {}", userId, friendId);
 
         } catch (Exception e) {

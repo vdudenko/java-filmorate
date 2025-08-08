@@ -27,4 +27,9 @@ public class MpaDbStorage implements MpaStorage {
     public Optional<Rating> findById(long ratingId) {
         return jdbc.query("SELECT * FROM ratings WHERE id = ?", mapper, ratingId).stream().findFirst();
     }
+
+    @Override
+    public boolean isMpaExist(long ratingId) {
+        return jdbc.query("SELECT * FROM ratings WHERE id = ?", mapper, ratingId).stream().findFirst().isPresent();
+    }
 }

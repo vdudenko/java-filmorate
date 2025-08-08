@@ -15,7 +15,6 @@ import ru.yandex.practicum.filmorate.annotation.MustBeAfter;
 @Setter
 @RequiredArgsConstructor
 @ToString
-@EqualsAndHashCode(of = {"name"})
 @AllArgsConstructor
 @Builder
 public class Film {
@@ -30,7 +29,7 @@ public class Film {
     private LocalDate releaseDate;
     @Positive
     private int duration;
-    private List<Genre> genre;
+    private List<Genre> genres;
     private Rating mpa;
     @JsonIgnore
     private Set<Long> likes = new HashSet<>();

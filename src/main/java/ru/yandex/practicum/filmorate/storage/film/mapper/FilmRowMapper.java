@@ -32,7 +32,7 @@ public class FilmRowMapper implements RowMapper<Film> {
                 .releaseDate(resultSet.getDate("release_date").toLocalDate())
                 .duration(resultSet.getInt("duration"))
                 .mpa(rating)
-                .genre(new ArrayList<>())
+                .genres(new ArrayList<>())
                 .build();
     }
 }

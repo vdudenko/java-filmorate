@@ -27,7 +27,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film create(Film film) {
         log.info("Создание фильма начинается");
-        if (isFilmNameExist(film.getName())) {
+        if (isFilmNameExist(film)) {
             log.error("Фильма с таким название уже есть");
             throw new DuplicatedDataException("Фильма с таким название уже есть");
         }
@@ -41,7 +41,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film update(Film film) {
         log.info("Обновление фильма начинается");
-        if (isFilmNameExist(film.getName())) {
+        if (isFilmNameExist(film)) {
             log.error("Фильма с таким название уже есть");
             throw new DuplicatedDataException("Фильма с таким название уже есть");
         }
@@ -75,9 +75,9 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Optional<Film> findByName(String userEmail) {
-        for (Film film : films.values()) {
-            if (userEmail.equals(film.getName())) {
+    public Optional<Film> findByName(Film film) {
+        for (Film f : films.values()) {
+            if (film.getName().equals(f.getName())) {
                 return Optional.of(film);
             }
         }
@@ -95,8 +95,8 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public boolean isFilmNameExist(String filmName) {
-        return findByName(filmName).isPresent();
+    public boolean isFilmNameExist(Film film) {
+        return findByName(film).isPresent();
     }
 
     @Override

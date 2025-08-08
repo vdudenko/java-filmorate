@@ -9,4 +9,6 @@ public interface MpaStorage {
     Collection<Rating> findAll();
 
     Optional<Rating> findById(long userId);
+
+    boolean isMpaExist(long ratingId);
 }
