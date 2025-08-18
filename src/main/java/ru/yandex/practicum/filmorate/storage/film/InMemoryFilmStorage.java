@@ -27,7 +27,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film create(Film film) {
         log.info("Создание фильма начинается");
-        if (isFilmExist(film)) {
+        if (isFilmNameExist(film)) {
             log.error("Фильма с таким название уже есть");
             throw new DuplicatedDataException("Фильма с таким название уже есть");
         }
@@ -41,7 +41,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film update(Film film) {
         log.info("Обновление фильма начинается");
-        if (isFilmExist(film)) {
+        if (isFilmNameExist(film)) {
             log.error("Фильма с таким название уже есть");
             throw new DuplicatedDataException("Фильма с таким название уже есть");
         }
@@ -75,27 +75,14 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public void addLike(long filmId, long userId) {
-        if (isNotFilmExist(filmId)) {
-            throw new NotFoundException("Фильм с id = " + filmId + " не найден");
+    public Optional<Film> findByName(Film film) {
+        for (Film f : films.values()) {
+            if (film.getName().equals(f.getName())) {
+                return Optional.of(film);
+            }
         }
-        if (!inMemoryUserStorage.getUsers().containsKey(userId)) {
-            throw new NotFoundException("Пользователь с id = " + filmId + " не найден");
-        }
-        Film film = films.get(filmId);
-        film.addLike(userId);
-    }
 
-    @Override
-    public void deleteLike(long filmId, long userId) {
-        if (isNotFilmExist(filmId)) {
-            throw new NotFoundException("Пользователь с id = " + filmId + " не найден");
-        }
-        if (!inMemoryUserStorage.getUsers().containsKey(userId)) {
-            throw new NotFoundException("Пользователь с id = " + filmId + " не найден");
-        }
-        Film film = films.get(filmId);
-        film.deleteLike(userId);
+        return Optional.empty();
     }
 
     @Override
@@ -107,6 +94,16 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public boolean isFilmNameExist(Film film) {
+        return findByName(film).isPresent();
+    }
+
+    @Override
+    public boolean isNotExistFilm(long filmId) {
+        return !films.containsKey(filmId);
+    }
+
     private long getNextId() {
         long currentMaxId = films.keySet()
                 .stream()
@@ -116,16 +113,25 @@ public class InMemoryFilmStorage implements FilmStorage {
         return ++currentMaxId;
     }
 
-    public static boolean isFilmExist(Film newFilm) {
-        for (Film film : films.values()) {
-            if (newFilm.equals(film)) {
-                return true;
-            }
+    public void addLike(long filmId, long userId) {
+        if (isNotExistFilm(filmId)) {
+            throw new NotFoundException("Фильм с id = " + filmId + " не найден");
         }
-        return false;
+        if (!inMemoryUserStorage.getUsers().containsKey(userId)) {
+            throw new NotFoundException("Пользователь с id = " + filmId + " не найден");
+        }
+        Film film = films.get(filmId);
+        film.addLike(userId);
     }
 
-    public static boolean isNotFilmExist(long filmId) {
-        return !films.containsKey(filmId);
+    public void deleteLike(long filmId, long userId) {
+        if (isNotExistFilm(filmId)) {
+            throw new NotFoundException("Пользователь с id = " + filmId + " не найден");
+        }
+        if (!inMemoryUserStorage.getUsers().containsKey(userId)) {
+            throw new NotFoundException("Пользователь с id = " + filmId + " не найден");
+        }
+        Film film = films.get(filmId);
+        film.deleteLike(userId);
     }
 }
