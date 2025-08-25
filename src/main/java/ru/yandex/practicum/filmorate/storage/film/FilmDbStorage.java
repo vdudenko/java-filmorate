@@ -35,10 +35,12 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Collection<Film> findAll() {
         log.info("Возвращаем список фильмов");
-        String sqlQuery = "SELECT f.*, r.name AS rating_name, r.description AS rating_description " +
-                "FROM films f " +
-                "LEFT JOIN ratings r ON f.rating_id = r.id " +
-                "ORDER BY f.id";
+        String sqlQuery = """
+            SELECT f.*, r.name AS rating_name, r.description AS rating_description
+            FROM films f
+            LEFT JOIN ratings r ON f.rating_id = r.id
+            ORDER BY f.id
+        """;
 
         return jdbc.query(sqlQuery, mapper);
     }
@@ -47,9 +49,11 @@ public class FilmDbStorage implements FilmStorage {
     public Optional<Film> findById(long filmId) {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("filmId", filmId);
-        String sqlQuery = "SELECT f.*, r.name AS rating_name, r.description AS rating_description FROM films f " +
-                "LEFT JOIN ratings r ON f.rating_id = r.id " +
-                "WHERE f.id = :filmId";
+        String sqlQuery = """
+            SELECT f.*, r.name AS rating_name, r.description AS rating_description FROM films f
+            LEFT JOIN ratings r ON f.rating_id = r.id
+            WHERE f.id = :filmId
+        """;
 
         List<Film> films = jdbc.query(sqlQuery, params, mapper);
 
@@ -67,13 +71,17 @@ public class FilmDbStorage implements FilmStorage {
     public Optional<Film> findByName(Film film) {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("filmName", film.getName());
-        String sqlQuery = "SELECT f.*, r.name AS rating_name, r.description AS rating_description FROM films f " +
-                "LEFT JOIN ratings r ON f.rating_id = r.id " +
-                "WHERE f.name = :filmName";
+        String sqlQuery = """
+            SELECT f.*, r.name AS rating_name, r.description AS rating_description
+            FROM films f
+            LEFT JOIN ratings r ON f.rating_id = r.id
+            WHERE f.name = :filmName
+        """;
+
         if (film.getId() > 0) {
-            sqlQuery = "SELECT f.*, r.name AS rating_name, r.description AS rating_description FROM films f " +
-                    "LEFT JOIN ratings r ON f.rating_id = r.id " +
-                    "WHERE f.name = :filmName AND f.id != :filmId";
+            sqlQuery += """
+                AND f.id != :filmId
+            """;
             params.addValue("filmId", film.getId());
         }
 
@@ -84,25 +92,30 @@ public class FilmDbStorage implements FilmStorage {
     public Collection<Film> getPopularFilms(int count) {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("count", count);
-        final String sqlQuery = "SELECT f.*, r.name AS rating_name, r.description AS rating_description FROM films AS f " +
-                "LEFT JOIN ratings r ON f.rating_id = r.id " +
-                "JOIN film_likes AS fl ON f.id = fl.film_id " +
-                "GROUP BY f.id ORDER BY COUNT(fl.*) DESC LIMIT :count";
+        final String sqlQuery = """
+            SELECT f.*, r.name AS rating_name, r.description AS rating_description FROM films AS f
+            LEFT JOIN ratings r ON f.rating_id = r.id
+            JOIN film_likes AS fl ON f.id = fl.film_id
+            GROUP BY f.id
+            ORDER BY COUNT(fl.*) DESC LIMIT :count
+        """;
 
         return jdbc.query(sqlQuery, params, mapper);
     }
 
     @Override
     public Film create(Film film) {
-        log.info("Создание фильма начинается" + film + "\n");
+        log.info("Создание фильма начинается {}", film);
         Long ratingId = film.getMpa() != null ? film.getMpa().getId() : null;
 
         if (ratingId != null && !mpaDbStorage.isMpaExist(ratingId)) {
             throw new NotFoundException("рейтинг с id: " + ratingId + "  не найден.");
         }
 
-        final String sqlQuery = "INSERT INTO films(name, description, release_date, duration, rating_id) " +
-                "VALUES (:name, :description, :releaseDate, :duration, :ratingId)";
+        final String sqlQuery = """
+            INSERT INTO films(name, description, release_date, duration, rating_id)
+            VALUES (:name, :description, :releaseDate, :duration, :ratingId)
+        """;
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("name", film.getName())
@@ -120,7 +133,7 @@ public class FilmDbStorage implements FilmStorage {
 
         film.setId(id);
         genreDbStorage.attachGenresToFilm(film);
-        log.info("Создание фильма завершено" + film + "\n");
+        log.info("Создание фильма завершено: {}", film.getId());
         return film;
     }
 
@@ -129,9 +142,11 @@ public class FilmDbStorage implements FilmStorage {
         log.info("Обновление фильма начинается");
 
         if (!isNotExistFilm(film.getId())) {
-            final String sqlQuery = "UPDATE films " +
-                    "SET name = :name, description = :description, release_date = :releaseDate, duration = :duration, rating_id = :ratingId " +
-                    "WHERE id = :filmId";
+            final String sqlQuery = """
+                UPDATE films " +
+                SET name = :name, description = :description, release_date = :releaseDate, duration = :duration, rating_id = :ratingId
+                WHERE id = :filmId
+            """;
             Long ratingId = film.getMpa() != null ? film.getMpa().getId() : null;
             MapSqlParameterSource params = new MapSqlParameterSource()
                     .addValue("filmId", film.getId())
@@ -167,10 +182,12 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private void loadGenresForFilm(Film film) {
-        String sqlQuery = "SELECT g.id, g.name " +
-                "FROM film_genres fg " +
-                "JOIN genres g ON fg.genre_id = g.id " +
-                "WHERE fg.film_id = :filmId ORDER BY g.id";
+        String sqlQuery = """
+            SELECT g.id, g.name
+            FROM film_genres fg
+            JOIN genres g ON fg.genre_id = g.id
+            WHERE fg.film_id = :filmId ORDER BY g.id
+        """;
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("filmId", film.getId());
 

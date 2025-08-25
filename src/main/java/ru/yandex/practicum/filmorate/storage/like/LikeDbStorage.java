@@ -28,8 +28,10 @@ public class LikeDbStorage implements LikeStorage {
             throw new NotFoundException("Пользователь с id = " + filmId + " не найден");
         }
 
-        final String sqlQuery = "INSERT INTO film_likes (film_id, user_id) " +
-                "VALUES (:filmId, :userId)";
+        final String sqlQuery = """
+            INSERT INTO film_likes (film_id, user_id)
+            VALUES (:filmId, :userId)
+        """;
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("filmId", filmId)
                 .addValue("userId", userId);
@@ -47,8 +49,10 @@ public class LikeDbStorage implements LikeStorage {
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
 
-        final String sqlQuery = "DELETE FROM film_likes " +
-                "WHERE film_id = :filmId AND user_id = :userId";
+        final String sqlQuery = """
+            DELETE FROM film_likes
+            WHERE film_id = :filmId AND user_id = :userId
+        """;
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("filmId", filmId)
                 .addValue("userId", userId);

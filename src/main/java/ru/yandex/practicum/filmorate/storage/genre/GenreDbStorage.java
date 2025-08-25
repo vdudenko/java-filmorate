@@ -36,10 +36,12 @@ public class GenreDbStorage implements GenreStorage {
 
     @Override
     public void loadGenresForFilm(Film film) {
-        String sqlQuery = "SELECT g.id, g.name " +
-                "FROM film_genres fg " +
-                "JOIN genres g ON fg.genre_id = g.id " +
-                "WHERE fg.film_id = :filmId ORDER BY g.id";
+        String sqlQuery = """
+            SELECT g.id, g.name
+            FROM film_genres fg
+            JOIN genres g ON fg.genre_id = g.id
+            WHERE fg.film_id = :filmId ORDER BY g.id
+        """;
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("filmId", film.getId());
 
@@ -65,7 +67,10 @@ public class GenreDbStorage implements GenreStorage {
 
         jdbc.update("DELETE FROM film_genres WHERE film_id = :filmId", params);
 
-        String sqlQuery = "INSERT INTO film_genres (film_id, genre_id) VALUES (:filmId, :genreId)";
+        String sqlQuery = """
+            INSERT INTO film_genres (film_id, genre_id)
+            VALUES (:filmId, :genreId)
+        """;
 
         SqlParameterSource[] paramsGenreIds = genreIds.stream()
                 .map(id -> new MapSqlParameterSource()

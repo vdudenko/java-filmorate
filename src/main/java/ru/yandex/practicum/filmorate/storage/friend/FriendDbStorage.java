@@ -32,11 +32,11 @@ public class FriendDbStorage implements FriendStorage {
     @Override
     public void addFriend(long userId, long friendId) {
         if (!userStorage.isUserExist(userId)) {
-            log.error("Пользователь с id = {} не найден", userId);
+            logUserNotFound(userId);
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
         if (!userStorage.isUserExist(friendId)) {
-            log.error("Пользователь с id = {} не найден", friendId);
+            logUserNotFound(friendId);
             throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
         }
 
@@ -45,8 +45,10 @@ public class FriendDbStorage implements FriendStorage {
         }
 
         try {
-            final String sqlQuery = "INSERT INTO user_friends (user_id, friend_id) " +
-                    "VALUES (?, ?)";
+            final String sqlQuery = """
+                INSERT INTO user_friends (user_id, friend_id)
+                VALUES (?, ?)
+            """;
             jdbc.update(sqlQuery, userId, friendId);
 
 //            confirmFriendShip(friendId, userId);
@@ -55,7 +57,7 @@ public class FriendDbStorage implements FriendStorage {
         } catch (DataIntegrityViolationException e) {
             if (e.getMessage().contains("duplicate key")) {
                 throw new DuplicatedDataException(
-                        "Запрос в друзья от пользователя " + userId + " к " + friendId + " уже существует"
+                    "Запрос в друзья от пользователя " + userId + " к " + friendId + " уже существует"
                 );
             } else {
                 log.error("Ошибка при добавлении в друзья: ", e);
@@ -70,19 +72,21 @@ public class FriendDbStorage implements FriendStorage {
     @Override
     public void deleteFriend(long userId, long friendId) {
         if (!userStorage.isUserExist(userId)) {
-            log.error("Пользователь с id = {} не найден", userId);
+            logUserNotFound(userId);
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
 
         if (!userStorage.isUserExist(friendId)) {
-            log.error("Пользователь с id = {} не найден", friendId);
+            logUserNotFound(friendId);
             throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
         }
 
         try {
-            String sqlQuery = "DELETE FROM user_friends " +
-                    "WHERE user_id = ? " +
-                    "AND friend_id = ?";
+            String sqlQuery = """
+                DELETE FROM user_friends
+                WHERE user_id = ?
+                AND friend_id = ?
+            """;
 
             jdbc.update(sqlQuery, userId, friendId);
             log.info("Пользователь {} удалил из друзей {}", userId, friendId);
@@ -96,14 +100,16 @@ public class FriendDbStorage implements FriendStorage {
     @Override
     public Collection<User> getFriends(long userId) {
         if (!userStorage.isUserExist(userId)) {
-            log.error("Пользователь с id = {} не найден", userId);
+            logUserNotFound(userId);
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
 
-        String sqlQuery = "SELECT u.id, u.name, u.login, u.email, u.birthday " +
-                "FROM user_friends uf " +
-                "JOIN users u ON uf.friend_id = u.id " +
-                "WHERE uf.user_id = ?";
+        String sqlQuery = """
+            SELECT u.id, u.name, u.login, u.email, u.birthday
+            FROM user_friends uf
+            JOIN users u ON uf.friend_id = u.id
+            WHERE uf.user_id = ?
+        """;
 
         return jdbc.query(sqlQuery, mapper, userId);
     }
@@ -111,20 +117,22 @@ public class FriendDbStorage implements FriendStorage {
     @Override
     public Collection<User> getIntersectFriends(long userId, long friendId) {
         if (!userStorage.isUserExist(userId)) {
-            log.error("Пользователь с id = {} не найден", userId);
+            logUserNotFound(userId);
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
 
         if (!userStorage.isUserExist(friendId)) {
-            log.error("Пользователь с id = {} не найден", friendId);
+            logUserNotFound(friendId);
             throw new NotFoundException("Пользователь с id = " + friendId + " не найден");
         }
-        String sqlQuery = "SELECT u.id, u.name, u.login, u.email, u.birthday " +
-                "FROM user_friends uf " +
-                "JOIN user_friends uf2 ON uf.friend_id = uf2.friend_id " +
-                "JOIN users u ON u.id = uf.friend_id " +
-                "WHERE uf.user_id = ? " +
-                "AND uf2.user_id = ?";
+        String sqlQuery = """
+            SELECT u.id, u.name, u.login, u.email, u.birthday
+            FROM user_friends uf
+            JOIN user_friends uf2 ON uf.friend_id = uf2.friend_id
+            JOIN users u ON u.id = uf.friend_id
+            WHERE uf.user_id = ?
+            AND uf2.user_id = ?
+        """;
 
         return jdbc.query(sqlQuery, mapper, userId, friendId);
     }
@@ -136,32 +144,36 @@ public class FriendDbStorage implements FriendStorage {
     @Override
     public boolean confirmFriendShip(long userId, long friendShipRequestUserId) {
         if (!userStorage.isUserExist(userId)) {
-            log.error("Пользователь с id = {} не найден", userId);
+            logUserNotFound(userId);
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
 
         if (!userStorage.isUserExist(friendShipRequestUserId)) {
-            log.error("Пользователь с id = {} не найден", friendShipRequestUserId);
+            logUserNotFound(friendShipRequestUserId);
             throw new NotFoundException("Пользователь с id = " + friendShipRequestUserId + " не найден");
         }
 
-        final String sqlQuery = "UPDATE user_friends " +
-                "SET is_confirmed = true " +
-                "WHERE user_id = ? AND friend_id = ?";
+        final String sqlQuery = """
+            UPDATE user_friends
+            SET is_confirmed = true
+            WHERE user_id = ? AND friend_id = ?
+        """;
 
-        int rowsUpdated = jdbc.update(
-                sqlQuery,
-                friendShipRequestUserId,
-                userId
-        );
+        int rowsUpdated = jdbc.update(sqlQuery, friendShipRequestUserId, userId);
 
         if (rowsUpdated != 0) {
-            final String sqlInsertQuery = "INSERT INTO user_friends (user_id, friend_id, is_confirmed) " +
-                    "VALUES (?, ?, true)";
+            final String sqlInsertQuery = """
+                INSERT INTO user_friends (user_id, friend_id, is_confirmed)
+                VALUES (?, ?, true)
+            """;
             jdbc.update(sqlInsertQuery, userId, friendShipRequestUserId);
             return false;
         }
 
         return true;
+    }
+
+    private void logUserNotFound(long userId) {
+        log.error("Пользователь с id = {} не найден", userId);
     }
 }
